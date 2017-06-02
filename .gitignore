@@ -1,0 +1,5 @@
+# what git ignores
+
+*~
+.ipynb_checkpoints
+*.pyc
