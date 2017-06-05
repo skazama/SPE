@@ -15,6 +15,7 @@ if [[ ! -e ./logs ]]; then
     mkdir logs
 fi
 
+workdir=$PWD
 noise_run=$(head -n 1 $1)
 LED_runs=$(tail -n +2 $1)
 
@@ -67,7 +68,7 @@ fi
 
 export PYTHONPATH=/project/lgrandi/anaconda3/envs/pax_head/lib/python3.4/site-packages:$PYTHONPATH
 
-/home/ershockley/analysis/old_analysis/spe_acceptance/spe_acceptance.py $run $noise_run $tmp_dir/$name $tmp_dir/$noise_name
+$workdir/spe_acceptance.py $run $noise_run $tmp_dir/$name $tmp_dir/$noise_name
 
 EOF
 
