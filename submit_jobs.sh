@@ -10,6 +10,11 @@
 # 4. top ring run
 
 
+# check if log dir exists
+if [[ ! -e ./logs ]]; then
+    mkdir logs
+fi
+
 noise_run=$(head -n 1 $1)
 LED_runs=$(tail -n +2 $1)
 
