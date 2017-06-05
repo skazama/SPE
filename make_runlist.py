@@ -96,23 +96,22 @@ def spe_run_counter(write = False):
 
     for blank, bot, bulk, ring in zip(spe_blank, spe_bottom, spe_topbulk, spe_topring):
         filename = "./runlists/runlist_%i_%i_%i.txt" % (bot, bulk, ring)
-        if write:
-            if not os.path.exists(filename):
+        if not os.path.exists(filename):
+            if write:
                 with open(filename, "w") as f:
                     f.write("%i\n" %blank)
                     f.write("%i\n" %bot)
                     f.write("%i\n" %bulk)
                     f.write("%i\n" %ring)
-
-        else:
-            print("%d %d %d %d" % (blank, bot, bulk, ring))
+            else:
+                print("%d %d %d %d" % (blank, bot, bulk, ring))
             
 if __name__ == '__main__':
     if len(sys.argv) > 1:
-        print("writing to files")
+        print("writing these runs to files")
         write = True
     else:
-        print("Dry run")
+        print("Dry run. These runs would be downloaded and analyzed.")
         write = False
     spe_run_counter(write)
 
