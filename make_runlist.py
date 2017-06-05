@@ -89,6 +89,7 @@ def spe_run_counter(write = False):
         for b in list(set(blank_remove)):
             spe_blank.remove(b)
 
+    print("Number of runs of each type. All 4 numbers should match")
     print("blank" , len(spe_blank))
     print("bottom", len(spe_bottom))
     print("topbulk", len(spe_topbulk))

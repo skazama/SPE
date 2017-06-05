@@ -18,7 +18,9 @@ How to run the code
 -------------------
 
 You must be in a pax environment (pax_head should be fine).
-You must execute all scripts from inside the spe_acceptance directory since the code uses relative paths (this can be changed if you want).
+    source activate pax_head
+    
+You must execute all scripts from inside the spe_acceptance directory since the code uses relative paths currently.
 
 `make_runlist.py` uses the RunsDB to pair SPE acceptance runs with blank runs and write a text file that is used in various parts of the analysis. It has a dry-run mode, so
 
