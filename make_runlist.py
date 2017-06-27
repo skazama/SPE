@@ -10,13 +10,7 @@ c = pymongo.MongoClient(uri,
 db = c['run']
 collection = db['runs_new']
 
-def get_last_run(path):
-    numbers = sorted([int(f.split("_")[1]) for f in os.listdir(path) if "run_" in f])
-    lastrun = numbers[-1]
-    return lastrun
-
-def spe_run_counter(write = False):
-    #last_run = get_last_run("./data")
+def write_spe_lists(write = False):
     query = {"detector":"tpc", 
              "source.type" : "LED",
              "tags" : {"$exists" : True},
@@ -53,7 +47,7 @@ def spe_run_counter(write = False):
         if "events_built" not in run["trigger"] or run["trigger"]["events_built"] < 100000:
             continue
         
-        if any(["Gain step_4" in com["text"] or "SPE acceptance step_0" in com["text"] or "LED calibration step 4" in com["text"] or "LED calibration, step 4" in com["text"] or "LED Calibration step 4" in com["text"] or "LED Calibration: step 4" in com['text'] or "LED Gain Calibration step4" in com['text'] or "http://wims.univ-savoie.fr/wims/" in com['text'] for com in run["comments"]]):
+        if any(["Gain step_4" in com["text"] or "SPE acceptance step_0" in com["text"] or "LED calibration step 4" in com["text"] or "LED calibration, step 4" in com["text"] or "LED Calibration step 4" in com["text"] or "LED Calibration: step 4" in com['text'] or "LED Gain Calibration step4" in com['text'] or "http://wims.univ-savoie.fr/wims/" in com['text'] or "PMT_callibration_step_4" in com["text"] for com in run["comments"]]):
             spe_blank.append(run["number"])
             
         if any(["SPE" in com["text"] for com in run["comments"]]):
@@ -89,16 +83,28 @@ def spe_run_counter(write = False):
         for b in list(set(blank_remove)):
             spe_blank.remove(b)
 
-    print("Number of runs of each type. All 4 numbers should match")
-    print("blank" , len(spe_blank))
-    print("bottom", len(spe_bottom))
-    print("topbulk", len(spe_topbulk))
-    print("topring", len(spe_topring))
+    print("Number of runs and most recent run of each type")
+    print("blank" , len(spe_blank), spe_blank[-1])
+    print("bottom", len(spe_bottom), spe_bottom[-1])
+    print("topbulk", len(spe_topbulk), spe_topbulk[-1])
+    print("topring", len(spe_topring), spe_topring[-1])
 
+    if not (len(spe_blank) == len(spe_bottom) == len(spe_topbulk) == len(spe_topring)):
+        print("Something went wrong, number of runs are not equal")
+        print("blank: " , spe_blank[-5:])
+        print("bottom: ", spe_bottom[-5:])
+        print("topbulk: ", spe_topbulk[-5:])
+        print("topring: ", spe_topring[-5:])
+
+
+    wrote = []
     for blank, bot, bulk, ring in zip(spe_blank, spe_bottom, spe_topbulk, spe_topring):
+        if not all([abs(blank - run) < 10 for run in [bot, bulk, ring] ]):
+            continue
         filename = "./runlists/runlist_%i_%i_%i.txt" % (bot, bulk, ring)
         if not os.path.exists(filename):
             if write:
+                wrote.append(filename)
                 with open(filename, "w") as f:
                     f.write("%i\n" %blank)
                     f.write("%i\n" %bot)
@@ -107,6 +113,9 @@ def spe_run_counter(write = False):
             else:
                 print("%d %d %d %d" % (blank, bot, bulk, ring))
             
+    if write:
+        return wrote
+
 if __name__ == '__main__':
     if len(sys.argv) > 1:
         print("writing these runs to files")
@@ -114,6 +123,6 @@ if __name__ == '__main__':
     else:
         print("Dry run. These runs would be downloaded and analyzed.")
         write = False
-    spe_run_counter(write)
+    write_spe_lists(write)
 
 

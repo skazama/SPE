@@ -17,6 +17,7 @@ One complication to the code is that, due to non-uniform LED exposure to PMTs, w
 How to run the code
 -------------------
 
+It is preferred to submit to xenon1t nodes from midway2 (ssh <user>@midway2.rcc.uchicago.edu). 
 You must be in a pax environment (pax_head should be fine).
     source activate pax_head
     
