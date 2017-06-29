@@ -13,9 +13,9 @@ collection = db['runs_new']
 def write_spe_lists(write = False):
     query = {"detector":"tpc", 
              "source.type" : "LED",
-             "tags" : {"$exists" : True},
-             "comments": {"$exists" : True}
-    #         "number" : {"$gt" : last_run}
+#             "tags" : {"$exists" : True},
+             "comments": {"$exists" : True},
+             "number" : {"$gt" : 6731}
             }
     
     cursor = collection.find(query, {"number" : True,
@@ -40,9 +40,9 @@ def write_spe_lists(write = False):
 
     # this is an absolute mess, but tries to figure out which runs are which configuration
     for run in cursor:
-        
-        if any(["bad" in t["name"] for t in run["tags"]]):
-            continue
+        if 'tags' in run:
+            if any(["bad" in t["name"] for t in run["tags"]]):
+                continue
         # make sure we're only considering the long LED runs 
         if "events_built" not in run["trigger"] or run["trigger"]["events_built"] < 100000:
             continue
@@ -84,17 +84,17 @@ def write_spe_lists(write = False):
             spe_blank.remove(b)
 
     print("Number of runs and most recent run of each type")
-    print("blank" , len(spe_blank), spe_blank[-1])
-    print("bottom", len(spe_bottom), spe_bottom[-1])
-    print("topbulk", len(spe_topbulk), spe_topbulk[-1])
-    print("topring", len(spe_topring), spe_topring[-1])
+    print("blank" , len(spe_blank), max(spe_blank))
+    print("bottom", len(spe_bottom), max(spe_bottom))
+    print("topbulk", len(spe_topbulk), max(spe_topbulk)
+    print("topring", len(spe_topring), max(spe_topring[-1]))
 
     if not (len(spe_blank) == len(spe_bottom) == len(spe_topbulk) == len(spe_topring)):
         print("Something went wrong, number of runs are not equal")
-        print("blank: " , spe_blank[-5:])
-        print("bottom: ", spe_bottom[-5:])
-        print("topbulk: ", spe_topbulk[-5:])
-        print("topring: ", spe_topring[-5:])
+        print("blank: " , spe_blank)
+        print("bottom: ", spe_bottom)
+        print("topbulk: ", spe_topbulk)
+        print("topring: ", spe_topring)
 
 
     wrote = []

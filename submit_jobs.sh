@@ -33,45 +33,59 @@ export PYTHONPATH=/project/lgrandi/anaconda3/envs/pax_head/lib/python3.4/site-pa
 noise_DID=$( python get_rucio_did.py $noise_run)
 noise_name=$( python get_name.py $noise_run)
 
-# download noise run
-if [[ ! -e $tmp_dir/$noise_name ]]; then
-    source /project/lgrandi/general_scripts/setup_rucio.sh
-    mkdir $tmp_dir/$noise_name
-    rucio download $noise_DID --dir $tmp_dir/$noise_name --no-subdir
-fi
+# write sbatch script for the noise run. This downloads noise run and submits 3 LED jobs.
+noise_sbatch=sbatch_scripts/${noise_run}.sbatch
+cat <<EOF > $noise_sbatch
+#!/bin/bash
+#SBATCH --job-name=spe_$noise_run
+#SBATCH --output=${PWD}/logs/run_${noise_run}_%J.log
+#SBATCH --error=${PWD}/logs/run_${noise_run}_%J.log
+#SBATCH --account=pi-lgrandi
+#SBATCH --qos=xenon1t
+#SBATCH --partition=xenon1t
 
-sleep 2
+export PATH=/project/lgrandi/anaconda3/bin:\$PATH
+source activate pax_head
+
+if [[ ! -e $tmp_dir/${noise_name} ]]; then
+    source /project/lgrandi/general_scripts/setup_rucio.sh
+    mkdir $tmp_dir/${noise_name}
+    echo "rucio download $noise_DID --dir $tmp_dir/${noise_name} --no-subdir"
+    rucio download $noise_DID --dir $tmp_dir/${noise_name} --no-subdir
+fi
+EOF
 
 # loop over LED_runs, submit jobs that download LED run and do runs spe_acceptance code
 for run in $LED_runs; do
     DID=$(python get_rucio_did.py $run)
     name=$(python get_name.py $run)
-    sbatch_script=./sbatch_scripts/$run.sbatch
+    sbatch_script=$PWD/sbatch_scripts/$run.sbatch
     cat <<EOF > $sbatch_script
 #!/bin/bash
-#SBATCH --job-name=spe_accept_$run
+#SBATCH --job-name=spe_$run
 #SBATCH --output=${PWD}/logs/run_${run}_%J.log
 #SBATCH --error=${PWD}/logs/run_${run}_%J.log
 #SBATCH --account=pi-lgrandi
 #SBATCH --qos=xenon1t
 #SBATCH --partition=xenon1t
 
-export PATH=/project/lgrandi/anaconda3/bin:$PATH
+export PATH=/project/lgrandi/anaconda3/bin:\$PATH
 source activate pax_head
-source /project/lgrandi/general_scripts/setup_rucio.sh
 
 if [[ ! -e $tmp_dir/$name ]]; then
+    tmp_pypath=$PYTHONPATH
+    source /project/lgrandi/general_scripts/setup_rucio.sh
     mkdir $tmp_dir/$name
     echo "rucio download $DID --dir $tmp_dir/$name --no-subdir"
     rucio download $DID --dir $tmp_dir/$name --no-subdir
+    export PYTHONPATH=$tmp_pypath
 fi
 
-export PYTHONPATH=/project/lgrandi/anaconda3/envs/pax_head/lib/python3.4/site-packages:$PYTHONPATH
-
-$workdir/spe_acceptance.py $run $noise_run $tmp_dir/$name $tmp_dir/$noise_name
-
+$workdir/spe_acceptance.py $run $noise_run $tmp_dir/$name $tmp_dir/$noise_name 
 EOF
-
-    sbatch $sbatch_script
-    sleep 1
+    
+    printf "sbatch $sbatch_script\n" >> $noise_sbatch
 done
+printf "sleep 10" >> $noise_sbatch
+
+sbatch $noise_sbatch

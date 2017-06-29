@@ -198,7 +198,10 @@ def get_thresholds(run_number):
             board = int(r['board'])
             channel = int(m.groups()[0])
             threshold = register_value(r)
-            pmt = lookup_pmt[board, channel]
+            try:
+                pmt = lookup_pmt[board, channel]
+            except KeyError:
+                continue
             thresholds[pmt] = threshold
 
     return [thresholds.get(i, default_threshold)
